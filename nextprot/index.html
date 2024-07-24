@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.body
+{
+  background-color: "#bbb" ;
+}
+.node rect {
+  cursor: pointer;
+  fill: #fff;
+  fill-opacity: .5;
+/*  stroke: #3182bd;
+  stroke-width: 1.5px;*/
+}
+
+.node text {
+  font: 20px sans-serif;
+  pointer-events: none;
+}
+
+path.link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<h1>Protein Expression Viewer</h1>
+<input type="button" value="Toggle or Collapse All" onclick="collapseall()"></input>
+
+
+<div id = "tab"></div>
+<script src="d3.min.js" charset="utf-8"></script>
+<script>
+//Setting the return colors corresponding to the expression levels
+function colorfill(colstr)
+{
+  switch(colstr){
+    case "high":
+      return "#BE0712"
+      break;
+    case "positive":
+      return "#BE0712"
+      break;
+    case "medium":
+      return '#000080'
+      break;
+    case "low":
+      return '#BACDE4'
+      break;
+    case 'negative':
+      return '#777'
+      break;
+  }
+}
+function barwid(colstr)
+{
+  switch(colstr){
+    case "positive":
+      return 480;
+      break;
+    case "medium":
+      return 360;
+      break;
+    case "low":
+      return 240;
+      break;
+    case 'negative':
+      return 120;
+      break;
+  }
+}
+
+
+var margin = {top: 30, right: 20, bottom: 30, left: 20},
+    width = 960 - margin.left - margin.right,
+    barHeight = 40,
+    barWidth = width * .4;
+
+// Initializing the variables
+var i = 0,
+    duration = 400,
+    root;
+
+// Using D3 layout tree . TODO: Use treelist.js of Patrick (thehogfather) instead of using layout tree. That should be a good option.
+var tree = d3.layout.tree()
+    .nodeSize([0, 20]);
+
+
+//Using body as the container to the svg element on which D3 data is to visualised
+var svg = d3.select("#tab").append("svg")
+    .attr("width", width + margin.left + margin.right)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("fill", "#bbb");
+
+//Reading the json data
+
+d3.json("https://api.nextprot.org/entry/NX_P38398/expression-profile.json", function(data) {
+  var obj;
+
+  var cnt=0;
+  var jsondata = '{"name":"Data","children":[';
+  try{
+    while(1)
+    {
+
+        obj = data.entry.annotations[cnt];
+        
+        jsondata+= '{"name":' + '"' + obj.cvTermName + '",';
+        try{
+          jsondata+= '"children":['
+          var cntr=0;
+          while(1)
+          {
+            objev = obj.evidences[cntr];
+            jsondata+= '{"name":"' + objev.evidenceId + '","value":"' + objev.expressionLevel + '","db":"' + objev.resourceDescription +'"},'
+            // console.log(objev.evidenceId + " : " + objev.expressionLevel + "  " + objev.resourceDescription);
+            cntr++;
+          }
+
+        }catch(err)
+        {
+          jsondata = jsondata.substring(0, jsondata.length - 1);
+          jsondata+= ']';
+        }
+        jsondata+="},";
+        cnt++;
+
+    }
+  }catch(e)
+  {
+    jsondata = jsondata.substring(0, jsondata.length - 1);
+  }
+  jsondata+="]}";
+
+  // console.log(jsondata);
+  jsondata = JSON.parse(jsondata);
+root = jsondata;
+
+
+ 
+
+  jsondata.x0 = 0;
+  jsondata.y0 = 0;
+  update(root);
+   
+var delay=5000; 
+
+
+
+});
+function collapseall()
+{
+
+  root.children.forEach(function(d){click(d);});
+}
+function textan(str){
+  if (str == "Bgee dataBase for Gene Expression Evolution")
+    return "Bgee";
+  if (str == "Human Protein Atlas")
+    return "HPA";
+}
+
+// To updata every time there is a change in the configuration of the d3 treelist.
+function update(source) {
+
+  var nodes = tree.nodes(root);
+
+  var height = Math.max(500, nodes.length * barHeight + margin.top + margin.bottom);
+
+  d3.select("svg").transition()
+      .duration(duration)
+      .attr("height", height);
+
+  d3.select(self.frameElement).transition()
+      .duration(duration)
+      .style("height", height + "px");
+
+  // Compute the "layout".
+  nodes.forEach(function(n, i) {
+    n.x = i * barHeight;
+  });
+
+  // Update the nodes…
+
+  var node = svg.selectAll("g.node")
+      .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+
+   var nodeEnter = node.enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + 0 + "," + source.x0 + ")"; })
+      .style("opacity", 1e-6);
+
+ 
+  // Enter any new nodes at the parent's previous position.
+
+  // node.append("circle")
+  //   .attr("r",8)
+  //   .style("fill",function(d){return d.values? colorfill(d.values[1].value) : "#fff"})
+  //   .style("fill-opacity",function(d){return d.values? 1 : 0})
+  //   .attr("cx",function(d){return width*.9});
+
+
+  nodeEnter.append("rect")
+      .attr("y", -barHeight / 2)
+      .attr("height", barHeight)
+      .attr("width", barWidth)
+      .style("fill", color)
+      .on("click", click);
+
+  var valuebar = nodeEnter.append("rect")
+    .attr("height",barHeight)
+    .attr("width",function(d){return d.value? barwid(d.value) : 0})
+    .style("fill",function(d){return d.value? colorfill(d.value) : "#fff"})
+    .style("fill-opacity",function(d){return d.value? 1 : 0})
+    .style("stroke","#bbb")
+    .style("stroke-width","5px")
+    .attr("y", -barHeight / 2)
+    .attr("x",function(d){return width*.4})
+    .on("click", click);
+
+valuebar.append("text")
+  .attr("dy", 3.5)
+      .attr("dx", 5.5)
+      .text(function(d) { return d.value});
+  nodeEnter.append("text")
+      .attr("x",function(d){return d.depth*25})
+      .attr("dy", 3.5)
+      .attr("dx", 5.5)
+      .text(function(d) { return (d.children || d._children)? ("+" + d.name) : (d.name + (d.db?"  (" + textan(d.db) + ")" : "")) ; });
+
+
+
+  // Transition nodes to their new position.
+  nodeEnter.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
+      .style("opacity", 1);
+
+  node.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
+      .style("opacity", 1)
+    .select("rect")
+      .style("fill", color);
+
+  // Transition exiting nodes to the parent's new position.
+  node.exit().transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + source.x + ")"; })
+      .style("opacity", 1e-6)
+      .remove();
+
+  nodes.forEach(function(d) {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+}
+
+// Toggle children on click.
+function click(d) {
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+  update(d);
+}
+
+function color(d) {
+  return d._children ? "#fff" : d.children ? "#fff" : "#fff";
+}
+
+
+</script>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Header files include bootstrap and jQuery for styling and collapse functions respectively -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+	<title>Expression Viewer</title>
+</head>
+<body class="container-fluid">
+<h1>
+	Expression Viewer
+</h1>
+<br>
+<br>
+<!-- The display of the data -->
+
+<!-- As the no. of columns are same in the given dataset, it has been hardcoded for n=2 -->
+
+<div class = "row">
+<div class="col-md-8 col-md-offset-2">
+
+<table class ="table"id="mytable" cellSpacing="10">
+<thead>
+	<tr>
+		<td></td>
+		<td><b>Labels</b></td>
+		<td><b>MicroArray</b></td>
+		<td><b>IHC</b></td>
+	</tr>
+</thead>
+
+</table>
+</div>
+</div>
+<!-- The table for colorcode -->
+<div class = "row">
+<div class="col-md-4 col-md-offset-4">
+<h4>Color Codes</h4>
+<table class = "table" id="colorcode"></table>
+</div>
+</div>
+<script type="text/javascript" src="data.json"></script>
+<script type="text/javascript">
+var obj = JSON.parse(data);
+var table = document.getElementById('mytable');
+var i;
+var coltable = document.getElementById('colorcode');
+var rown=1;
+
+
+//function to determine the color codes according to the values
+function color(exp)
+{
+	if(exp=="High")
+	{
+		return "#F44336";
+	}
+	else if(exp=="Moderate")
+	{
+		return "#E57373";
+	}
+	else
+	{
+		return "#FFCDD2";
+	}
+
+}
+
+
+// var childcolors = ['#95a5a6','#3498db','#1abc9c'];
+
+
+//As the no. of columns are same in the given dataset, it has been hardcoded for n=2
+
+//Initialization for row, the label cell, microarray cell,IHC cell
+var row;
+var topic;
+var ma;
+var ihc;
+//To get the child level. Basically to change indentation and colors, for better understandability
+var childLevel;
+
+var Levels = ["High","Moderate","Low"];
+
+for (var i = 0;i<3;i++)
+{
+	row = coltable.insertRow(i);
+	topic = row.insertCell(0);
+	ma = row.insertCell(1);
+
+	topic.innerHTML = Levels[i];
+	ma.style.backgroundColor = color(Levels[i]);
+	ma.style.border = "10px solid #fff";
+}
+
+//Iteration of the parent element
+for (var i=0; i<(Object.keys(obj).length);i++)
+{
+	//Add the parent rows, The value i increments along parents, whereas, rown increments for each row
+	row = table.insertRow(rown);
+	expand = row.insertCell(0);
+	topic = row.insertCell(1);
+	ma = row.insertCell(2);
+	ihc = row.insertCell(3);
+	rown++;
+	topic.innerHTML = (obj[i][Object.keys(obj[i])[0]]);
+	// The above is called in such a way because at some places the name is described as 'label' whereas at other places as 'rowLabel'. For the values, it does not matter.
+	ma.style.backgroundColor = color(obj[i].values[0].value);
+	ihc.style.backgroundColor = color(obj[i].values[1].value);
+	ma.innerHTML  = obj[i].values[0].value;
+	ihc.innerHTML = obj[i].values[1].value;
+	ma.style.border = "10px solid #fff";
+	ihc.style.border = "10px solid #fff";
+	//Initial depth
+	childLevel = 0;
+	nthchild(obj,i,childLevel);
+
+}
+
+
+//Recursive function to iterate over the child elements. Here, 'children' specifically
+function nthchild(obj,i,childLevel)
+{
+	if ('children' in obj[i])
+	{	
+		//datatar is to get all id's to be put into data-target for collapse functioning.
+		var datatar = ""
+		for (var j=0; j<(Object.keys(obj[i].children).length);j++)
+		{
+			datatar+= "#c" + i + j;
+			if (j!=(Object.keys(obj[i].children).length)-1)
+			{
+				datatar+=","
+			}
+
+		}
+		childLevel++;
+		expand.innerHTML = '<button type="button" data-toggle="collapse" data-target=' + datatar + '>+</button>';
+		for (var j=0; j<(Object.keys(obj[i].children).length);j++)
+		{
+			row = table.insertRow(rown);
+			expand = row.insertCell(0);
+			topic = row.insertCell(1);
+			ma = row.insertCell(2);
+			ihc = row.insertCell(3);
+			rown++;
+			topic.innerHTML = (obj[i].children[j][Object.keys(obj[i].children[j])[0]]);
+			ma.style.backgroundColor = color(obj[i].children[j].values[0].value);
+			ihc.style.backgroundColor = color(obj[i].children[j].values[1].value);
+			ma.innerHTML = obj[i].children[j].values[0].value;
+			ihc.innerHTML = obj[i].children[j].values[1].value;
+			ma.style.border = "10px solid #fff";
+			ihc.style.border = "10px solid #fff";
+			row.setAttribute("class","collapse");
+			//setting id's fpr each child row for collapse functionality.
+			row.setAttribute("id", "c" + i + j + "");
+			
+			// topic.style.backgroundColor = childcolors[childLevel];
+			topic.style.paddingLeft = "" + childLevel*25 + "px";
+			//Recursive Call
+			nthchild(obj[i].children,j,childLevel);
+
+		}
+	}
+}
+
+</script>
+</body>
+</html>

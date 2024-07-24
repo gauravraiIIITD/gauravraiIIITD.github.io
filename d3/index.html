@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node rect {
+  cursor: pointer;
+  fill: #fff;
+  fill-opacity: .5;
+/*  stroke: #3182bd;
+  stroke-width: 1.5px;*/
+}
+
+.node text {
+  font: 20px sans-serif;
+  pointer-events: none;
+}
+
+path.link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="d3.min.js" charset="utf-8"></script>
+<script>
+
+//Setting the return colors corresponding to the expression levels
+function colorfill(colstr)
+{
+  switch(colstr){
+    case "High":
+      return "#BE0712"
+      break;
+    case "Moderate":
+      return '#FC0D1B'
+      break;
+    case "Low":
+      return '#BACDE4'
+      break;
+    case 'Negative':
+      return '#777'
+      break;
+  }
+}
+
+
+var margin = {top: 30, right: 20, bottom: 30, left: 20},
+    width = 960 - margin.left - margin.right,
+    barHeight = 40,
+    barWidth = width * .5;
+
+// Initializing the variables
+var i = 0,
+    duration = 400,
+    root;
+
+// Using D3 layout tree . TODO: Use treelist.js of Patrick (thehogfather) instead of using layout tree. That should be a good option.
+var tree = d3.layout.tree()
+    .nodeSize([0, 20]);
+
+
+//Using body as the container to the svg element on which D3 data is to visualised
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+//Hardcoded the columnlabels as there are only two columns in the whole json data.
+svg.append("text")
+  .text("MicroArray")
+  .attr("text-anchor","middle")
+  .attr("x",width*0.8);
+
+svg.append("text")
+  .text("IHC")
+  .attr("text-anchor","middle")
+  .attr("x",width*0.9);
+
+//Reading the json data
+d3.json("data.json", function(data) {
+  data.x0 = 0;
+  data.y0 = 0;
+  update(root = data);
+});
+
+// To updata every time there is a change in the configuration of the d3 treelist.
+function update(source) {
+
+  var nodes = tree.nodes(root);
+
+  var height = Math.max(500, nodes.length * barHeight + margin.top + margin.bottom);
+
+  d3.select("svg").transition()
+      .duration(duration)
+      .attr("height", height);
+
+  d3.select(self.frameElement).transition()
+      .duration(duration)
+      .style("height", height + "px");
+
+  // Compute the "layout".
+  nodes.forEach(function(n, i) {
+    n.x = i * barHeight;
+  });
+
+  // Update the nodes…
+
+  var node = svg.selectAll("g.node")
+      .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+
+   var nodeEnter = node.enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + 0 + "," + source.x0 + ")"; })
+      .style("opacity", 1e-6);
+
+ 
+  // Enter any new nodes at the parent's previous position.
+  var micro = node.append("circle")
+    .attr("r",8)
+    .style("fill",function(d){return d.values? colorfill(d.values[0].value) : "#fff"})
+    .style("fill-opacity",function(d){return d.values? 1 : 0})
+    .attr("cx",function(d){return width*.8});
+
+  node.append("circle")
+    .attr("r",8)
+    .style("fill",function(d){return d.values? colorfill(d.values[1].value) : "#fff"})
+    .style("fill-opacity",function(d){return d.values? 1 : 0})
+    .attr("cx",function(d){return width*.9});
+
+
+  nodeEnter.append("rect")
+      .attr("y", -barHeight / 2)
+      .attr("height", barHeight)
+      .attr("width", barWidth)
+      .style("fill", color)
+      .on("click", click);
+
+  nodeEnter.append("text")
+      .attr("x",function(d){return d.depth*25})
+      .attr("dy", 3.5)
+      .attr("dx", 5.5)
+      .text(function(d) { return (d.children || d._children)? "+ " + d.rowLabel : d.rowLabel; });
+
+
+
+  // Transition nodes to their new position.
+  nodeEnter.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
+      .style("opacity", 1);
+
+  node.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
+      .style("opacity", 1)
+    .select("rect")
+      .style("fill", color);
+
+  // Transition exiting nodes to the parent's new position.
+  node.exit().transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + 0 + "," + source.x + ")"; })
+      .style("opacity", 1e-6)
+      .remove();
+
+  nodes.forEach(function(d) {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+}
+
+// Toggle children on click.
+function click(d) {
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+  update(d);
+}
+
+function color(d) {
+  return d._children ? "#fff" : d.children ? "#fff" : "#fff";
+}
+
+
+</script>
