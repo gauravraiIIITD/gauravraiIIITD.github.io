@@ -320,6 +320,34 @@ I enjoy building systems that combine geometric reasoning with modern generative
                 <h1 style="margin-bottom: -20px;">Publications</h1>
             </div>
             <!-- Published Section -->
+		    <head>
+			  <style>
+			    .venue {
+			      color: grey;
+			    }
+
+			    .highlight {
+			      color: red;
+			      font-weight: bold;
+			      display: inline-block;
+			      animation: pulse 1.2s ease-in-out infinite;
+			    }
+
+			    @keyframes pulse {
+			      0%, 100% {
+			        opacity: 1;
+			        transform: scale(1);
+			        text-shadow: 0 0 0 red;
+			      }
+
+			      50% {
+			        opacity: 0.6;
+			        transform: scale(1.08);
+			        text-shadow: 0 0 10px red;
+			      }
+			    }
+			  </style>
+			</head>
             <div class="row" style="margin-bottom: 10px;">
                 <ul class="ul-papers" style="padding: 10; margin: 0;">
                     <li>
@@ -331,7 +359,7 @@ I enjoy building systems that combine geometric reasoning with modern generative
                             <p class="title">SketchAnim: Real-time sketch animation transfer from videos</p>
                             <p class="authors"><b>Gaurav Rai</b>, Shreyas Gupta, Ojaswa Sharma.</p>
                             <p class="venue", style="color: grey;">23RD ACM SIGGRAPH / EUROGRAPHICS Symposium on Computer Animation (SCA 2024).</p>
-                            <p class="venue">Published in <span style="color:red">Computer Graphics Forum.</span></p>
+                            <p class="venue">Published in <span class="highlight">Computer Graphics Forum.</span></p>
                             <p class="resources">
                                 [
                                 <a href="https://onlinelibrary.wiley.com/doi/10.1111/cgf.15176" target="_blank" rel="noopener">Paper</a>
@@ -455,7 +483,6 @@ I enjoy building systems that combine geometric reasoning with modern generative
 
 			<div class="row" style="margin-bottom: 20px;">
 			    <ul class="ul-papers" style="padding: 10; margin: 0;">
-			    <h3>Preprints / Under review</h3>
 			        <li>
 			            <div class="img">
 			                <img src="papers/images/texsketch.png" class="img-responsive" alt="">
@@ -463,13 +490,14 @@ I enjoy building systems that combine geometric reasoning with modern generative
 			            <div class="description">
 			                <p class="title">TexSketch: Bringing Texture-Aware Colorization to Sketches</p>
 			                <p class="authors">Taraash Mittal*, <b>Gaurav Rai*</b>, Ojaswa Sharma.</p>
-			                <p class="venue" style="color: grey;">Under review, 2026</p>
+			                <p class="venue" style="color: grey;">European Conference on Computer Vision (ECCVw 2026).</p>
+			                <p class="venue" style="color: grey;"><span class="highlight">Oral Spotlight</span></p>
 			                <p class="resources">
 			                    [
-			                    <a href="https://arxiv.org/abs/2607.24261" target="_blank" rel="noopener">ArXiv</a>
+			                    <a href="https://arxiv.org/abs/2607.24261" target="_blank" rel="noopener">Paper</a>
 			                    ]
 			                    [
-			                    <a href="coming soon" target="_blank" rel="noopener">Code</a>
+			                    <a href="https://github.com/graphics-research-group/TexSketch" target="_blank" rel="noopener">Code</a>
 			                    ]
 			                    [
 			                    <a href="coming soon" target="_blank" rel="noopener">Project Page</a>
@@ -482,6 +510,7 @@ I enjoy building systems that combine geometric reasoning with modern generative
 
             <div class="row" style="margin-bottom: 20px;">
                 <ul class="ul-papers" style="padding: 10; margin: 0;">
+                	<h3>Preprints / Under review</h3>
                     <li>
                         <div class="img">
                             <img src="papers/images/pp1.png" class="img-responsive" alt="">
